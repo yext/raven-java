@@ -4,6 +4,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 
 /**
  * Collection of builtin Raven/Sentry events.
@@ -96,8 +97,13 @@ public abstract class Events {
     @SuppressWarnings("unchecked")
     public static JSONObject buildStacktrace(Throwable exception) {
         JSONArray array = new JSONArray();
+        LinkedList<Throwable> causes = new LinkedList<Throwable>();
         Throwable cause = exception;
         while (cause != null) {
+            causes.addFirst(cause);
+            cause = cause.getCause();
+        }
+        while ((cause = causes.pollLast()) != null) {
             StackTraceElement[] elements = cause.getStackTrace();
             for (int index = elements.length - 1; index >= 0; --index) {
                 StackTraceElement element = elements[index];
@@ -113,9 +119,19 @@ public abstract class Events {
                     frame.put("lineno", element.getLineNumber());
                 }
                 array.add(frame);
+
+                if (index == 0) {
+                    JSONObject causedByFrame = new JSONObject();
+                    String msg = "Caused by: " + cause.getClass().getName();
+                    if (cause.getMessage() != null) {
+                      msg += " (\"" + cause.getMessage() + "\")";
+                    }
+                    causedByFrame.put("filename", msg);
+                    array.add(causedByFrame);
+                }
             }
-            cause = cause.getCause();
         }
+        array.remove(array.size() - 1);
         JSONObject stacktrace = new JSONObject();
         stacktrace.put("frames", array);
         return stacktrace;
