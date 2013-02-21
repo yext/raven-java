@@ -103,7 +103,7 @@ public abstract class Events {
             causes.addFirst(cause);
             cause = cause.getCause();
         }
-        while ((cause = causes.pollLast()) != null) {
+        while ((cause = causes.poll()) != null) {
             StackTraceElement[] elements = cause.getStackTrace();
             for (int index = elements.length - 1; index >= 0; --index) {
                 StackTraceElement element = elements[index];
