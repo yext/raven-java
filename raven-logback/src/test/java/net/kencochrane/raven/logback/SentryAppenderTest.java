@@ -138,7 +138,7 @@ public class SentryAppenderTest {
         assertTrue(frames.size() > 0);
         JSONObject exception = (JSONObject) json.get("sentry.interfaces.Exception");
         assertNotNull(exception);
-        assertEquals(NullPointerException.class.getSimpleName(), exception.get("type"));
+        assertEquals(NullPointerException.class.getName(), exception.get("type"));
         assertEquals(npe.getMessage(), exception.get("value"));
         assertEquals(NullPointerException.class.getPackage().getName(), exception.get("module"));
     }

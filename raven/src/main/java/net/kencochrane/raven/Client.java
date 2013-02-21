@@ -263,6 +263,7 @@ public class Client {
             message = (exception == null ? null : exception.getMessage());
             message = (message == null ? Default.EMPTY_MESSAGE : message);
         }
+        obj.put("platform", "java");
         obj.put("event_id", eventId);
         obj.put("checksum", calculateChecksum(message));
         obj.put("timestamp", timestamp);

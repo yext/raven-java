@@ -87,7 +87,7 @@ public abstract class Events {
     @SuppressWarnings("unchecked")
     public static JSONObject buildException(Throwable exception) {
         JSONObject json = new JSONObject();
-        json.put("type", exception.getClass().getSimpleName());
+        json.put("type", exception.getClass().getName());
         json.put("value", exception.getMessage());
         json.put("module", exception.getClass().getPackage().getName());
         return json;
@@ -99,22 +99,19 @@ public abstract class Events {
         Throwable cause = exception;
         while (cause != null) {
             StackTraceElement[] elements = cause.getStackTrace();
-            for (int index = 0; index < elements.length; ++index) {
-                if (index == 0) {
-                    JSONObject causedByFrame = new JSONObject();
-                    String msg = "Caused by: " + cause.getClass().getName();
-                    if (cause.getMessage() != null) {
-                        msg += " (\"" + cause.getMessage() + "\")";
-                    }
-                    causedByFrame.put("filename", msg);
-                    causedByFrame.put("lineno", -1);
-                    array.add(causedByFrame);
-                }
+            for (int index = elements.length - 1; index >= 0; --index) {
                 StackTraceElement element = elements[index];
                 JSONObject frame = new JSONObject();
-                frame.put("filename", element.getClassName());
-                frame.put("function", element.getMethodName());
-                frame.put("lineno", element.getLineNumber());
+                frame.put("filename", element.getFileName());
+                frame.put("function", element.getClassName() + "." + element.getMethodName());
+                if (element.getClassName().startsWith("com.yext") || element.getClassName().startsWith("com.alphaco")) {
+                    frame.put("in_app", true);
+                } else {
+                    frame.put("in_app", false);
+                }
+                if (element.getLineNumber() > 0) {
+                    frame.put("lineno", element.getLineNumber());
+                }
                 array.add(frame);
             }
             cause = cause.getCause();
