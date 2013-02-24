@@ -4,7 +4,7 @@ import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.Collections;
 
 /**
  * Collection of builtin Raven/Sentry events.
@@ -97,43 +97,47 @@ public abstract class Events {
     @SuppressWarnings("unchecked")
     public static JSONObject buildStacktrace(Throwable exception) {
         JSONArray array = new JSONArray();
-        LinkedList<Throwable> causes = new LinkedList<Throwable>();
+        StackTraceElement[] causedTrace = null;
         Throwable cause = exception;
         while (cause != null) {
-            causes.addFirst(cause);
-            cause = cause.getCause();
-        }
-        while ((cause = causes.poll()) != null) {
-            StackTraceElement[] elements = cause.getStackTrace();
-            for (int index = elements.length - 1; index >= 0; --index) {
-                StackTraceElement element = elements[index];
-                JSONObject frame = new JSONObject();
-                frame.put("filename", "----" + element.getFileName());
-                frame.put("function", element.getClassName() + "." + element.getMethodName());
-                if (element.getClassName().startsWith("com.yext") || element.getClassName().startsWith("com.alphaco")) {
-                    frame.put("in_app", true);
-                } else {
-                    frame.put("in_app", false);
+            JSONObject causedByFrame = new JSONObject();
+            if (array.isEmpty()) {
+                causedByFrame.put("filename", cause.toString());
+            } else {
+                causedByFrame.put("filename", "Caused by: " + cause.toString());
+            }
+            array.add(causedByFrame);
+
+            StackTraceElement[] trace = cause.getStackTrace();
+            int framesInCommon = 0;
+            if (causedTrace != null) {
+                int m = trace.length-1, n = causedTrace.length-1;
+                while (m >= 0 && n >=0 && trace[m].equals(causedTrace[n])) {
+                    m--; n--;
                 }
+                framesInCommon = trace.length - 1 - m;
+            }
+
+            for (int i = 0; i < trace.length; i++) {
+                StackTraceElement element = trace[i];
+                JSONObject frame = new JSONObject();
+                frame.put("filename", "...." + element.getFileName());
+                frame.put("function", element.getClassName() + "." + element.getMethodName());
                 if (element.getLineNumber() > 0) {
                     frame.put("lineno", element.getLineNumber());
                 }
-                array.add(frame);
-
-                if (index == 0) {
-                    JSONObject causedByFrame = new JSONObject();
-                    String msg = "Caused by: " + cause.getClass().getName();
-                    if (cause.getMessage() != null) {
-                      msg += ": " + cause.getMessage();
-                    }
-                    causedByFrame.put("filename", msg);
-                    array.add(causedByFrame);
+                if (i > trace.length - 1 - framesInCommon) {
+                    frame.put("in_app", false);
+                } else {
+                    frame.put("in_app", true);
                 }
+                array.add(frame);
             }
+
+            causedTrace = trace;
+            cause = cause.getCause();
         }
-        JSONObject mostRecentCause = (JSONObject)array.get(array.size() - 1);
-        String causeString = (String)mostRecentCause.get("filename");
-        mostRecentCause.put("filename", causeString.replaceFirst("Caused by: ", ""));
+        Collections.reverse(array);
 
         JSONObject stacktrace = new JSONObject();
         stacktrace.put("frames", array);
