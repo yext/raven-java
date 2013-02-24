@@ -265,7 +265,7 @@ public class Client {
         }
         obj.put("platform", "java");
         obj.put("event_id", eventId);
-        obj.put("checksum", calculateChecksum(message));
+        // obj.put("checksum", calculateChecksum(message));
         obj.put("timestamp", timestamp);
         obj.put("message", message);
         obj.put("project", dsn.projectId);

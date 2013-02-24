@@ -108,7 +108,7 @@ public abstract class Events {
             for (int index = elements.length - 1; index >= 0; --index) {
                 StackTraceElement element = elements[index];
                 JSONObject frame = new JSONObject();
-                frame.put("filename", element.getFileName());
+                frame.put("filename", "----" + element.getFileName());
                 frame.put("function", element.getClassName() + "." + element.getMethodName());
                 if (element.getClassName().startsWith("com.yext") || element.getClassName().startsWith("com.alphaco")) {
                     frame.put("in_app", true);
@@ -124,14 +124,17 @@ public abstract class Events {
                     JSONObject causedByFrame = new JSONObject();
                     String msg = "Caused by: " + cause.getClass().getName();
                     if (cause.getMessage() != null) {
-                      msg += " (\"" + cause.getMessage() + "\")";
+                      msg += ": " + cause.getMessage();
                     }
                     causedByFrame.put("filename", msg);
                     array.add(causedByFrame);
                 }
             }
         }
-        array.remove(array.size() - 1);
+        JSONObject mostRecentCause = (JSONObject)array.get(array.size() - 1);
+        String causeString = (String)mostRecentCause.get("filename");
+        mostRecentCause.put("filename", causeString.replaceFirst("Caused by: ", ""));
+
         JSONObject stacktrace = new JSONObject();
         stacktrace.put("frames", array);
         return stacktrace;
