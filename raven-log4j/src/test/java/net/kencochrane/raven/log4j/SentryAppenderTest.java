@@ -135,7 +135,7 @@ public class SentryAppenderTest {
         Logger.getLogger(loggerName).error(message, npe);
 
         // Verify
-        JSONObject json = verifyMessage(culprit, logLevel, projectId, message);
+        JSONObject json = verifyMessage("Damn you!", logLevel, projectId, message);
         JSONObject stacktrace = (JSONObject) json.get("sentry.interfaces.Stacktrace");
         assertNotNull(stacktrace);
         assertNotNull(stacktrace.get("frames"));

@@ -72,17 +72,10 @@ public abstract class Events {
      * @return the culprit
      */
     public static String determineCulprit(Throwable exception) {
-        Throwable cause = exception;
-        String culprit = null;
-        while (cause != null) {
-            StackTraceElement[] elements = cause.getStackTrace();
-            if (elements.length > 0) {
-                StackTraceElement trace = elements[0];
-                culprit = trace.getClassName() + "." + trace.getMethodName();
-            }
-            cause = cause.getCause();
+        if (exception.getMessage() != null) {
+            return exception.getMessage();
         }
-        return culprit;
+        return exception.getClass().getName();
     }
 
     @SuppressWarnings("unchecked")
