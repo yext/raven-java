@@ -99,6 +99,7 @@ public abstract class Events {
             } else {
                 causedByFrame.put("filename", "Caused by: " + cause.toString());
             }
+            causedByFrame.put("in_app", true);
             array.add(causedByFrame);
 
             StackTraceElement[] trace = cause.getStackTrace();
